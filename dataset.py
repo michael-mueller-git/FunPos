@@ -16,7 +16,10 @@ import numpy as np
 class Funscript_Dataset(Dataset):
 
     def __init__(self, data_dir):
-        self.videos = [os.path.join(data_dir, f) for f in os.listdir(data_dir) if f.lower().endswith((".mp4", ".mkv"))]
+        self.videos = [os.path.join(data_dir, f) \
+                for f in os.listdir(data_dir) \
+                if f.lower().endswith((".mp4", ".mkv"))
+        ]
         self.video_idx = -1
         self.frame_num = 0
         self.last_label = 0
@@ -32,7 +35,16 @@ class Funscript_Dataset(Dataset):
         for v in self.videos:
             with open("".join(v[:-4]) + ".labels", "r") as f:
                 labels = json.load(f)
-                self.length += int((max([int(x) for x in labels.keys()]) - min([int(x) for x in labels.keys()]) - config.seq_len - 1)/(config.skip_frames+1))
+                self.length += int(
+                    (
+                        max([int(x) for x in labels.keys()])
+                        - min([int(x) for x in labels.keys()])
+                        - config.seq_len
+                        - 1
+                    ) / (
+                        config.skip_frames + 1
+                    )
+                )
 
 
     def inc_frame_counter(self):
@@ -82,7 +94,11 @@ class Funscript_Dataset(Dataset):
         self.param['resize'] = (config.img_width, config.img_height)
         if self.stream is not None:
             self.stream.stop()
-        self.stream = FFmpegStream(self.videos[self.video_idx], self.param, skip_frames=config.skip_frames)
+        self.stream = FFmpegStream(
+                self.videos[self.video_idx],
+                self.param,
+                skip_frames=config.skip_frames
+        )
         self.load_next_video_frames()
         self.last_label = max(self.labels.keys())
 
@@ -96,7 +112,9 @@ class Funscript_Dataset(Dataset):
         else:
             self.read_next_frame()
 
-        frames = np.array(np.array([x - config.IMAGE_MEAN for x in self.last_frames])).transpose([0, 3, 1, 2]) # time, channel, height, width
-        position = np.array([self.labels[self.frame_num-(i*(config.skip_frames+1))] for i in reversed(range(config.seq_len))])
+        frames = np.array(np.array([x - config.IMAGE_MEAN \
+            for x in self.last_frames])).transpose([0, 3, 1, 2]) # time, channel, height, width
+        position = np.array([self.labels[self.frame_num-(i*(config.skip_frames+1))] \
+            for i in reversed(range(config.seq_len))])
 
         return torch.from_numpy(frames).float(), torch.from_numpy(position).float()

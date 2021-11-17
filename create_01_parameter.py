@@ -24,7 +24,7 @@ for video_file in get_videos():
         video.stop()
         cv2.destroyAllWindows()
 
-        selection = input("save parameters? [y/N] ")
+        selection = input("parameter ok? -> save parameters? [y/N] ")
         if selection.lower() == "y":
             print('save param')
             with open("".join(video_file[:-4]) + '.param', "w") as f:

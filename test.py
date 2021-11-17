@@ -2,21 +2,23 @@ import cv2
 import torch
 import config
 import json
-from lib.funscript import Funscript
 
+from lib.funscript import Funscript
 from lib.ffmpegstream import FFmpegStream
+from model.model import FunPosModel
 
 import numpy as np
 
-from model.model import FunPos_Model
+
 
 WEIGHTS='./checkpoint/FunPos_ep_009'
 TEST_FILE='./data/test/example1.mkv'
 
+
 if __name__ == '__main__':
     print('Load', WEIGHTS)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = FunPos_Model().to(device)
+    model = FunPosModel().to(device)
     model.load_state_dict(torch.load(WEIGHTS, map_location=device)['model_state_dict'])
     model.eval()
 
@@ -28,17 +30,16 @@ if __name__ == '__main__':
     with open("".join(TEST_FILE[:-4]) + '.param', "r") as f:
         param = json.load(f)
 
-    cap = FFmpegStream(TEST_FILE, param, skip_frames=config.skip_frames)
-    frames = []
-    frame_numer = 0
+    video = FFmpegStream(TEST_FILE, param, skip_frames=config.skip_frames)
+    frames, frame_numer = [], 0
     for i in range(config.seq_len):
-        image = cap.read()
+        image = video.read()
         frames.append(image - config.IMAGE_MEAN)
         frame_numer += (config.skip_frames  + 1)
 
     with torch.no_grad():
-        while cap.isOpen():
-            image = cap.read()
+        while video.isOpen():
+            image = video.read()
             del frames[0]
             frames.append(image - config.IMAGE_MEAN)
             frame_numer += (config.skip_frames  + 1)
@@ -51,4 +52,6 @@ if __name__ == '__main__':
 
     funscript.save("".join(TEST_FILE)[:-4] + ".funscript")
     print("done")
-    if torch.cuda.is_available(): torch.cuda.empty_cache()
+
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
