@@ -6,6 +6,7 @@ import json
 import torch
 import time
 import config
+import einops
 
 from torch.utils.data import Dataset
 from lib.ffmpegstream import FFmpegStream
@@ -113,8 +114,10 @@ class Funscript_Dataset(Dataset):
             self.read_next_frame()
 
         frames = np.array(np.array([x - config.IMAGE_MEAN \
-            for x in self.last_frames])).transpose([0, 3, 1, 2]) # time, channel, height, width
+            for x in self.last_frames]))
         position = np.array([self.labels[self.frame_num-(i*(config.skip_frames+1))] \
             for i in reversed(range(config.seq_len))])
+
+        frames = einops.rearrange(frames, 'time height width channel -> time channel height width')
 
         return torch.from_numpy(frames).float(), torch.from_numpy(position).float()

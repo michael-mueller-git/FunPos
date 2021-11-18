@@ -2,6 +2,7 @@ import cv2
 import torch
 import config
 import json
+import einops
 
 from lib.funscript import Funscript
 from lib.ffmpegstream import FFmpegStream
@@ -11,7 +12,7 @@ import numpy as np
 
 
 
-WEIGHTS='./checkpoint/FunPos_ep_009'
+WEIGHTS='./checkpoint/FunPos_ep_014'
 TEST_FILE='./data/test/example1.mkv'
 
 
@@ -43,7 +44,8 @@ if __name__ == '__main__':
             del frames[0]
             frames.append(image - config.IMAGE_MEAN)
             frame_numer += (config.skip_frames  + 1)
-            frames_tensor = torch.from_numpy(np.array(frames).transpose([0, 3, 1, 2])).float().unsqueeze(0).to(device) # 1, time, channel, height, width
+            frames_array = einops.rearrange(np.array(frames), 'time height width channel -> time channel height width')
+            frames_tensor = torch.from_numpy(frames_array).float().unsqueeze(0).to(device)
             x = model(frames_tensor)
             x = x.cpu().numpy()[0][0][0]
             x = min((1.0, max((0.0, x))))
