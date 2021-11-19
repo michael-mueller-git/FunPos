@@ -11,8 +11,8 @@ from model.model1 import FunPosModel
 from model.model2 import FunPosTransformerModel
 
 
-# LR = 1e-4
-LR = 1e-8
+LR = 1e-4
+# LR = 1e-8
 LR_MILESTONES = [7,12,15]
 EPOCHS = 25
 
@@ -25,14 +25,14 @@ if __name__ == '__main__':
     train_dataloader = DataLoader(train_dataset, batch_size=config.batch_size, shuffle=False, num_workers=1)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    # model = FunPosModel().to(device)
-    model = FunPosTransformerModel().to(device)
+    model = FunPosModel().to(device)
+    # model = FunPosTransformerModel().to(device)
 
     optimizer = optim.Adam(model.parameters(), lr=LR)
     scheduler = optim.lr_scheduler.MultiStepLR(optimizer, LR_MILESTONES, gamma=0.1, last_epoch=-1)
 
-    # criterion = nn.MSELoss()
-    criterion = my_loss
+    criterion = nn.MSELoss()
+    # criterion = my_loss
 
     for epoch in range(1, EPOCHS+1):
         print('#'*80)

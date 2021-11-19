@@ -13,15 +13,15 @@ import numpy as np
 
 
 
-WEIGHTS='./checkpoint/FunPos_ep_004'
+WEIGHTS='./checkpoint/FunPos_ep_001'
 TEST_FILE='./data/test/example1.mkv'
 
 
 if __name__ == '__main__':
     print('Load', WEIGHTS)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    # model = FunPosModel().to(device)
-    model = FunPosTransformerModel().to(device)
+    model = FunPosModel().to(device)
+    # model = FunPosTransformerModel().to(device)
     model.load_state_dict(torch.load(WEIGHTS, map_location=device)['model_state_dict'])
     model.eval()
 
