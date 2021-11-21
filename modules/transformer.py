@@ -1,27 +1,104 @@
-import torch
+
 from torch import nn, einsum
-import torch.nn.functional as F
-
-from einops import rearrange, repeat
+import torch
 from einops.layers.torch import Rearrange
+from einops import rearrange, repeat
 
-class Residual(nn.Module):
-    def __init__(self, fn):
-        super().__init__()
-        self.fn = fn
-    def forward(self, x, **kwargs):
-        return self.fn(x, **kwargs) + x
 
 class PreNorm(nn.Module):
     def __init__(self, dim, fn):
         super().__init__()
         self.norm = nn.LayerNorm(dim)
         self.fn = fn
+
     def forward(self, x, **kwargs):
         return self.fn(self.norm(x), **kwargs)
 
+
+class FSAttention(nn.Module):
+    """Factorized Self-Attention"""
+
+    def __init__(self, dim, heads=8, dim_head=64, dropout=0.):
+        super().__init__()
+        inner_dim = dim_head * heads
+        project_out = not (heads == 1 and dim_head == dim)
+
+        self.heads = heads
+        self.scale = dim_head ** -0.5
+
+        self.attend = nn.Softmax(dim=-1)
+        self.to_qkv = nn.Linear(dim, inner_dim * 3, bias=False)
+
+        self.to_out = nn.Sequential(
+            nn.Linear(inner_dim, dim),
+            nn.Dropout(dropout)
+        ) if project_out else nn.Identity()
+
+    def forward(self, x):
+        b, n, _, h = *x.shape, self.heads
+        qkv = self.to_qkv(x).chunk(3, dim=-1)
+        q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> b h n d', h=h), qkv)
+
+        dots = einsum('b h i d, b h j d -> b h i j', q, k) * self.scale
+
+        attn = self.attend(dots)
+
+        out = einsum('b h i j, b h j d -> b h i d', attn, v)
+        out = rearrange(out, 'b h n d -> b n (h d)')
+        return self.to_out(out)
+
+
+class FDAttention(nn.Module):
+    """Factorized Dot-product Attention"""
+
+    def __init__(self, dim, nt, nh, nw, heads=8, dim_head=64, dropout=0.):
+        super().__init__()
+        inner_dim = dim_head * heads
+        project_out = not (heads == 1 and dim_head == dim)
+
+        self.nt = nt
+        self.nh = nh
+        self.nw = nw
+
+        self.heads = heads
+        self.scale = dim_head ** -0.5
+
+        self.attend = nn.Softmax(dim=-1)
+        self.to_qkv = nn.Linear(dim, inner_dim * 3, bias=False)
+
+        self.to_out = nn.Sequential(
+            nn.Linear(inner_dim, dim),
+            nn.Dropout(dropout)
+        ) if project_out else nn.Identity()
+
+    def forward(self, x):
+        b, n, d, h = *x.shape, self.heads
+
+        qkv = self.to_qkv(x).chunk(3, dim=-1)
+        q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> b h n d', h=h), qkv)
+        qs, qt = q.chunk(2, dim=1)
+        ks, kt = k.chunk(2, dim=1)
+        vs, vt = v.chunk(2, dim=1)
+
+        # Attention over spatial dimension
+        qs = qs.view(b, h // 2, self.nt, self.nh * self.nw, -1)
+        ks, vs = ks.view(b, h // 2, self.nt, self.nh * self.nw, -1), vs.view(b, h // 2, self.nt, self.nh * self.nw, -1)
+        spatial_dots = einsum('b h t i d, b h t j d -> b h t i j', qs, ks) * self.scale
+        sp_attn = self.attend(spatial_dots)
+        spatial_out = einsum('b h t i j, b h t j d -> b h t i d', sp_attn, vs)
+
+        # Attention over temporal dimension
+        qt = qt.view(b, h // 2, self.nh * self.nw, self.nt, -1)
+        kt, vt = kt.view(b, h // 2, self.nh * self.nw, self.nt, -1), vt.view(b, h // 2, self.nh * self.nw, self.nt, -1)
+        temporal_dots = einsum('b h s i d, b h s j d -> b h s i j', qt, kt) * self.scale
+        temporal_attn = self.attend(temporal_dots)
+        temporal_out = einsum('b h s i j, b h s j d -> b h s i d', temporal_attn, vt)
+
+        # return self.to_out(out)
+
+
 class FeedForward(nn.Module):
-    def __init__(self, dim, hidden_dim, dropout = 0.):
+    def __init__(self, dim, hidden_dim, dropout=0.):
         super().__init__()
         self.net = nn.Sequential(
             nn.Linear(dim, hidden_dim),
@@ -30,173 +107,79 @@ class FeedForward(nn.Module):
             nn.Linear(hidden_dim, dim),
             nn.Dropout(dropout)
         )
+
     def forward(self, x):
         return self.net(x)
 
-class Attention(nn.Module):
-    def __init__(self, dim, heads = 8, dim_head = 64, dropout = 0.):
+
+class FSATransformerEncoder(nn.Module):
+    """Factorized Self-Attention Transformer Encoder"""
+
+    def __init__(self, dim, depth, heads, dim_head, mlp_dim, nt, nh, nw, dropout=0.):
         super().__init__()
-        inner_dim = dim_head *  heads
-        project_out = not (heads == 1 and dim_head == dim)
+        self.layers = nn.ModuleList([])
+        self.nt = nt
+        self.nh = nh
+        self.nw = nw
 
-        self.heads = heads
-        self.scale = dim_head ** -0.5
-
-        self.to_qkv = nn.Linear(dim, inner_dim * 3, bias = False)
-
-        self.to_out = nn.Sequential(
-            nn.Linear(inner_dim, dim),
-            nn.Dropout(dropout)
-        ) if project_out else nn.Identity()
+        for _ in range(depth):
+            self.layers.append(nn.ModuleList(
+                [PreNorm(dim, FSAttention(dim, heads=heads, dim_head=dim_head, dropout=dropout)),
+                 PreNorm(dim, FSAttention(dim, heads=heads, dim_head=dim_head, dropout=dropout)),
+                 PreNorm(dim, FeedForward(dim, mlp_dim, dropout=dropout))
+                 ]))
 
     def forward(self, x):
-        b, n, _, h = *x.shape, self.heads
-        qkv = self.to_qkv(x).chunk(3, dim = -1)
-        q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> b h n d', h = h), qkv)
 
-        dots = einsum('b h i d, b h j d -> b h i j', q, k) * self.scale
+        b = x.shape[0]
+        x = torch.flatten(x, start_dim=0, end_dim=1)  # extract spatial tokens from x
 
-        attn = dots.softmax(dim=-1)
+        for sp_attn, temp_attn, ff in self.layers:
+            sp_attn_x = sp_attn(x) + x  # Spatial attention
 
-        out = einsum('b h i j, b h j d -> b h i d', attn, v)
-        out = rearrange(out, 'b h n d -> b n (h d)')
-        out =  self.to_out(out)
-        return out
+            # Reshape tensors for temporal attention
+            sp_attn_x = sp_attn_x.chunk(b, dim=0)
+            sp_attn_x = [temp[None] for temp in sp_attn_x]
+            sp_attn_x = torch.cat(sp_attn_x, dim=0).transpose(1, 2)
+            sp_attn_x = torch.flatten(sp_attn_x, start_dim=0, end_dim=1)
 
+            temp_attn_x = temp_attn(sp_attn_x) + sp_attn_x  # Temporal attention
 
-class ReAttention(nn.Module):
-    def __init__(self, dim, heads = 8, dim_head = 64, dropout = 0.):
-        super().__init__()
-        inner_dim = dim_head *  heads
-        self.heads = heads
-        self.scale = dim_head ** -0.5
+            x = ff(temp_attn_x) + temp_attn_x  # MLP
 
-        self.to_qkv = nn.Linear(dim, inner_dim * 3, bias = False)
+            # Again reshape tensor for spatial attention
+            x = x.chunk(b, dim=0)
+            x = [temp[None] for temp in x]
+            x = torch.cat(x, dim=0).transpose(1, 2)
+            x = torch.flatten(x, start_dim=0, end_dim=1)
 
-        self.reattn_weights = nn.parameter.Parameter(torch.randn(heads, heads))
-
-        self.reattn_norm = nn.Sequential(
-            Rearrange('b h i j -> b i j h'),
-            nn.LayerNorm(heads),
-            Rearrange('b i j h -> b h i j')
-        )
-
-        self.to_out = nn.Sequential(
-            nn.Linear(inner_dim, dim),
-            nn.Dropout(dropout)
-        )
-
-    def forward(self, x):
-        b, n, _, h = *x.shape, self.heads
-        qkv = self.to_qkv(x).chunk(3, dim = -1)
-        q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> b h n d', h = h), qkv)
-
-        # attention
-
-        dots = einsum('b h i d, b h j d -> b h i j', q, k) * self.scale
-        attn = dots.softmax(dim=-1)
-
-        # re-attention
-
-        attn = einsum('b h i j, h g -> b g i j', attn, self.reattn_weights)
-        attn = self.reattn_norm(attn)
-
-        # aggregate and out
-
-        out = einsum('b h i j, b h j d -> b h i d', attn, v)
-        out = rearrange(out, 'b h n d -> b n (h d)')
-        out =  self.to_out(out)
-        return out
-
-class LeFF(nn.Module):
-
-    def __init__(self, dim = 192, scale = 4, depth_kernel = 3):
-        super().__init__()
-
-        scale_dim = dim*scale
-        self.up_proj = nn.Sequential(nn.Linear(dim, scale_dim),
-                                    Rearrange('b n c -> b c n'),
-                                    nn.BatchNorm1d(scale_dim),
-                                    nn.GELU(),
-                                    Rearrange('b c (h w) -> b c h w', h=14, w=14)
-                                    )
-
-        self.depth_conv =  nn.Sequential(
-                nn.Conv2d(
-                    scale_dim,
-                    scale_dim,
-                    kernel_size=depth_kernel,
-                    padding=1,
-                    groups=scale_dim,
-                    bias=False
-                ),
-                nn.BatchNorm2d(scale_dim),
-                nn.GELU(),
-                Rearrange('b c h w -> b (h w) c', h=14, w=14)
-        )
-
-        self.down_proj = nn.Sequential(
-                nn.Linear(scale_dim, dim),
-                Rearrange('b n c -> b c n'),
-                nn.BatchNorm1d(dim),
-                nn.GELU(),
-                Rearrange('b c n -> b n c')
-        )
-
-    def forward(self, x):
-        x = self.up_proj(x)
-        x = self.depth_conv(x)
-        x = self.down_proj(x)
+        # Reshape vector to [b, nt*nh*nw, dim]
+        x = x.chunk(b, dim=0)
+        x = [temp[None] for temp in x]
+        x = torch.cat(x, dim=0)
+        x = torch.flatten(x, start_dim=1, end_dim=2)
         return x
 
 
-class LCAttention(nn.Module):
-    def __init__(self, dim, heads = 8, dim_head = 64, dropout = 0.):
-        super().__init__()
-        inner_dim = dim_head *  heads
-        project_out = not (heads == 1 and dim_head == dim)
+class FDATransformerEncoder(nn.Module):
+    """Factorized Dot-product Attention Transformer Encoder"""
 
-        self.heads = heads
-        self.scale = dim_head ** -0.5
-
-        self.to_qkv = nn.Linear(dim, inner_dim * 3, bias = False)
-
-        self.to_out = nn.Sequential(
-            nn.Linear(inner_dim, dim),
-            nn.Dropout(dropout)
-        ) if project_out else nn.Identity()
-
-    def forward(self, x):
-        b, n, _, h = *x.shape, self.heads
-        qkv = self.to_qkv(x).chunk(3, dim = -1)
-        q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> b h n d', h = h), qkv)
-        q = q[:, :, -1, :].unsqueeze(2) # Only Lth element use as query
-
-        dots = einsum('b h i d, b h j d -> b h i j', q, k) * self.scale
-
-        attn = dots.softmax(dim=-1)
-
-        out = einsum('b h i j, b h j d -> b h i d', attn, v)
-        out = rearrange(out, 'b h n d -> b n (h d)')
-        out =  self.to_out(out)
-        return out
-
-
-class Transformer(nn.Module):
-
-    def __init__(self, dim, depth, heads, dim_head, mlp_dim, dropout = 0.):
+    def __init__(self, dim, depth, heads, dim_head, mlp_dim, nt, nh, nw, dropout=0.):
         super().__init__()
         self.layers = nn.ModuleList([])
-        self.norm = nn.LayerNorm(dim)
-        for _ in range(depth):
-            self.layers.append(nn.ModuleList([
-                PreNorm(dim, Attention(dim, heads = heads, dim_head = dim_head, dropout = dropout)),
-                PreNorm(dim, FeedForward(dim, mlp_dim, dropout = dropout))
-            ]))
+        self.nt = nt
+        self.nh = nh
+        self.nw = nw
 
+        for _ in range(depth):
+            self.layers.append(
+                PreNorm(dim, FDAttention(dim, nt, nh, nw, heads=heads, dim_head=dim_head, dropout=dropout)))
 
     def forward(self, x):
-        for attn, ff in self.layers:
+        for attn in self.layers:
             x = attn(x) + x
-            x = ff(x) + x
-        return self.norm(x)
+
+        return x
+
+
+

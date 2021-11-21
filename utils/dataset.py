@@ -11,7 +11,7 @@ import numpy as np
 
 class Funscript_Dataset(Dataset):
 
-    def __init__(self, data_dir, skip_frames, seq_len, img_width, img_height):
+    def __init__(self, data_dir, skip_frames, seq_len, img_width, img_height, output='time channel height width'):
         self.videos = [os.path.join(data_dir, f) \
                 for f in os.listdir(data_dir) \
                 if f.lower().endswith((".mp4", ".mkv"))
@@ -20,6 +20,7 @@ class Funscript_Dataset(Dataset):
         self.seq_len = seq_len
         self.img_width = img_width
         self.img_height = img_height
+        self.output = output
         self.video_idx = -1
         self.frame_num = 0
         self.last_label = 0
@@ -116,6 +117,6 @@ class Funscript_Dataset(Dataset):
         position = np.array([self.labels[self.frame_num-(i*(self.skip_frames+1))] \
             for i in reversed(range(self.seq_len))])
 
-        frames = einops.rearrange(frames, 'time height width channel -> time channel height width')
+        frames = einops.rearrange(frames, 'time height width channel -> ' + self.output)
 
         return torch.from_numpy(frames).float(), torch.from_numpy(position).float()

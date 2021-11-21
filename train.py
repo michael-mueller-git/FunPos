@@ -32,7 +32,7 @@ if __name__ == '__main__':
             skip_frames = SKIP_FRAMES,
             seq_len = SEQ_LEN,
             img_width = IMG_WIDTH,
-            img_height = IMG_HEIGHT
+            img_height = IMG_HEIGHT,
     )
     train_dataloader = DataLoader(train_dataset, batch_size=BARCH_SIZE, shuffle=False, num_workers=1)
 

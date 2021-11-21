@@ -1,95 +1,87 @@
 import torch
 import einops
-import einops.layers.torch
+
+from torch import nn, einsum
+from einops.layers.torch import Rearrange
+from einops import rearrange, repeat
+from modules.transformer import FSATransformerEncoder
+
 from utils.config import CONFIG
-
-import torch.nn as nn
-
-from modules.transformer import Attention, PreNorm, FeedForward, Transformer
 
 MODEL='model2'
 
-class ViViT(nn.Module):
 
-    def __init__(self,
-            image_size,
-            patch_size,
-            num_frames,
-            dim = 192,
-            depth = 4,
-            heads = 3,
-            pool = 'cls',
-            in_channels = 3,
-            dim_head = 64,
-            dropout = 0.,
-            emb_dropout = 0.,
-            scale_dim = 4):
+class ViViTBackbone(nn.Module):
+
+    def __init__(self, t, h, w, patch_t, patch_h, patch_w, dim, depth, heads, mlp_dim, dim_head=3,
+                 channels=3, mode='tubelet', emb_dropout=0., dropout=0.):
         super().__init__()
 
-        assert pool in {'cls', 'mean'}, 'pool type must be either cls (cls token) or mean (mean pooling)'
-        assert image_size % patch_size == 0, 'Image dimensions must be divisible by the patch size.'
-        num_patches = (image_size // patch_size) ** 2
-        patch_dim = in_channels * patch_size ** 2
-        self.to_patch_embedding = nn.Sequential(
-            einops.layers.torch.Rearrange('b t c (h p1) (w p2) -> b t (h w) (p1 p2 c)', p1 = patch_size, p2 = patch_size),
-            nn.Linear(patch_dim, dim),
+        assert t % patch_t == 0 and h % patch_h == 0 and w % patch_w == 0, \
+            "Video dimensions should be divisible by tubelet size"
+
+        self.T = t
+        self.H = h
+        self.W = w
+        self.channels = channels
+        self.t = patch_t
+        self.h = patch_h
+        self.w = patch_w
+        self.mode = mode
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+        self.nt = self.T // self.t
+        self.nh = self.H // self.h
+        self.nw = self.W // self.w
+
+        tubelet_dim = self.t * self.h * self.w * channels
+
+        self.to_tubelet_embedding = nn.Sequential(
+            Rearrange('b (t pt) c (h ph) (w pw) -> b t (h w) (pt ph pw c)', pt=self.t, ph=self.h, pw=self.w),
+            nn.Linear(tubelet_dim, dim)
         )
 
-        self.pos_embedding = nn.parameter.Parameter(torch.randn(1, num_frames, num_patches + 1, dim))
-        self.space_token = nn.parameter.Parameter(torch.randn(1, 1, dim))
-        self.space_transformer = Transformer(dim, depth, heads, dim_head, dim*scale_dim, dropout)
-
-        self.temporal_token = nn.parameter.Parameter(torch.randn(1, 1, dim))
-        self.temporal_transformer = Transformer(dim, depth, heads, dim_head, dim*scale_dim, dropout)
-
+        # repeat same spatial position encoding temporally
+        self.pos_embedding = nn.parameter.Parameter(torch.randn(1, 1, self.nh * self.nw, dim)).repeat(1, self.nt, 1, 1).to(self.device)
         self.dropout = nn.Dropout(emb_dropout)
-        self.pool = pool
+        self.transformer = FSATransformerEncoder(dim, depth, heads, dim_head, mlp_dim, self.nt, self.nh, self.nw, dropout)
+
+        self.to_latent = nn.Identity()
 
         self.mlp_head = nn.Sequential(
             nn.LayerNorm(dim),
-            nn.Linear(dim, num_frames)
+            nn.Linear(dim, self.T)
         )
 
-
     def forward(self, x):
-        x = self.to_patch_embedding(x)
-        b, t, n, _ = x.shape
+        """ x is a video frame sequence: (b, T, C, H, W) """
 
-        cls_space_tokens = einops.repeat(self.space_token, '() n d -> b t n d', b = b, t=t)
-        x = torch.cat((cls_space_tokens, x), dim=2)
-        x += self.pos_embedding[:, :, :(n + 1)]
-        x = self.dropout(x)
+        tokens = self.to_tubelet_embedding(x)
 
-        x = einops.rearrange(x, 'b t n d -> (b t) n d')
-        x = self.space_transformer(x)
-        x = einops.rearrange(x[:, 0], '(b t) ... -> b t ...', b=b)
+        tokens += self.pos_embedding
+        tokens = self.dropout(tokens)
 
-        cls_temporal_tokens = einops.repeat(self.temporal_token, '() n d -> b n d', b=b)
-        x = torch.cat((cls_temporal_tokens, x), dim=1)
+        x = self.transformer(tokens)
+        x = x.mean(dim=1)
 
-        x = self.temporal_transformer(x)
-        x = x.mean(dim = 1) if self.pool == 'mean' else x[:, 0]
-
+        x = self.to_latent(x)
         x = self.mlp_head(x)
-
         x = einops.rearrange(x, 'a b -> b a').unsqueeze(0)
-
         return x
 
 
-class FunPosTransformerModel(ViViT):
+class FunPosTransformerModel(ViViTBackbone):
 
     def __init__(self):
         super().__init__(
-                image_size = CONFIG[MODEL]['img_width'],
-                patch_size = 16,
-                num_frames = CONFIG[MODEL]['seq_len'],
-                dim = 192,
-                depth = 4,
-                heads = 3,
-                pool = 'cls',
-                in_channels = 3,
-                dim_head = 64,
-                dropout = 0.1,
-                emb_dropout = 0.1,
-                scale_dim = 4)
+                t = CONFIG[MODEL]['seq_len'],
+                h = CONFIG[MODEL]['img_height'],
+                w = CONFIG[MODEL]['img_width'],
+                patch_t = 4,
+                patch_h = 8,
+                patch_w = 8,
+                dim = 512,
+                depth = 6,
+                heads = 10,
+                mlp_dim = 8,
+        )

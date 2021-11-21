@@ -37,6 +37,7 @@ WEIGHTS = get_weights_file()
 if __name__ == '__main__':
     print('Load', WEIGHTS)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print("create model", MODEL_CLASS)
     exec('model = ' + MODEL_CLASS + '().to(device)')
     model.load_state_dict(torch.load(WEIGHTS, map_location=device)['model_state_dict'])
     model.eval()
