@@ -20,6 +20,8 @@ SEQ_LEN = CONFIG[MODEL]['seq_len']
 SKIP_FRAMES = CONFIG[MODEL]['skip_frames']
 TEST_FILE = CONFIG['general']['test_file']
 CHEKPOINT_DIR = CONFIG['general']['checkpoint_dir']
+IMG_WIDTH = CONFIG[MODEL]['img_width']
+IMG_HEIGHT = CONFIG[MODEL]['img_height']
 
 def get_weights_file():
     if not os.path.exists(CHEKPOINT_DIR):
@@ -50,6 +52,7 @@ if __name__ == '__main__':
     with open("".join(TEST_FILE[:-4]) + '.param', "r") as f:
         param = json.load(f)
 
+    param['resize'] = (IMG_WIDTH, IMG_HEIGHT)
     video = FFmpegStream(TEST_FILE, param, skip_frames=SKIP_FRAMES)
     frames, frame_numer = [], 0
     for i in range(SEQ_LEN):
