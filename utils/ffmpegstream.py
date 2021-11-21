@@ -15,7 +15,7 @@ from queue import Queue
 import subprocess as sp
 import numpy as np
 
-from lib.watchdog import Watchdog
+from utils.watchdog import Watchdog
 
 @dataclass
 class VideoInfo:

@@ -1,0 +1,33 @@
+# funpos config
+
+general:
+  checkpoint_dir: 'checkpoint'
+  train_dir: './data/train'
+  batch_size: 1 # data loader is only implemented for case == 1!
+  select: 'model1'
+  test_file: './data/test/example1.mkv'
+
+model1:
+  name: 'funpos1'
+  class: 'FunPosModel'
+  skip_frames: 2
+  img_width: 128
+  img_height: 128
+  img_channels: 3
+  convlstm_hidden_dim: 64
+  seq_len: 8
+  lr: 0.0001
+  lr_milestones: [7, 12, 15]
+  epochs: 25
+
+model2:
+  name: 'funpos2'
+  class: 'FunPosTransformerModel'
+  skip_frames: 2
+  img_width: 224
+  img_height: 224
+  img_channels: 3
+  seq_len: 8
+  lr: 0.0001
+  lr_milestones: [7, 12, 15]
+  epochs: 25

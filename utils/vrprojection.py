@@ -1,4 +1,4 @@
-from lib.ffmpegstream import FFmpegStream
+from utils.ffmpegstream import FFmpegStream
 import cv2
 import yaml
 import copy
@@ -19,7 +19,7 @@ def read_yaml_config(config_file: str) -> dict:
     with open(config_file) as f:
         return yaml.load(f, Loader = yaml.FullLoader)
 
-PROJECTION = read_yaml_config("./lib/projection.yaml")
+PROJECTION = read_yaml_config("./utils/projection.yaml")
 
 class VrProjection:
 

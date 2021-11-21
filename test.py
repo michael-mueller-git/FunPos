@@ -1,27 +1,43 @@
 import cv2
 import torch
-import config
+import sys
+import os
 import json
 import einops
 
-from lib.funscript import Funscript
-from lib.ffmpegstream import FFmpegStream
+from utils.funscript import Funscript
+from utils.ffmpegstream import FFmpegStream
+from utils.config import CONFIG
 from model.model1 import FunPosModel
 from model.model2 import FunPosTransformerModel
 
 import numpy as np
 
 
+MODEL = CONFIG['general']['select']
+MODEL_CLASS = CONFIG[MODEL]['class']
+SEQ_LEN = CONFIG[MODEL]['seq_len']
+SKIP_FRAMES = CONFIG[MODEL]['skip_frames']
+TEST_FILE = CONFIG['general']['test_file']
+CHEKPOINT_DIR = CONFIG['general']['checkpoint_dir']
 
-WEIGHTS='./checkpoint/FunPos_ep_001'
-TEST_FILE='./data/test/example1.mkv'
+def get_weights_file():
+    if not os.path.exists(CHEKPOINT_DIR):
+        print("checkpoint directory does not exist")
+        sys.exit()
+    cp = [os.path.join(CHEKPOINT_DIR, f) for f in os.listdir(CHEKPOINT_DIR) if f.startswith(CONFIG[MODEL]['name'] + '_ep')]
+    if len(cp) < 1:
+        print("checkpoint for selected model not available")
+        sys.exit()
+    cp.sort()
+    return cp[-1]
 
+WEIGHTS = get_weights_file()
 
 if __name__ == '__main__':
     print('Load', WEIGHTS)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = FunPosModel().to(device)
-    # model = FunPosTransformerModel().to(device)
+    exec('model = ' + MODEL_CLASS + '().to(device)')
     model.load_state_dict(torch.load(WEIGHTS, map_location=device)['model_state_dict'])
     model.eval()
 
@@ -33,19 +49,19 @@ if __name__ == '__main__':
     with open("".join(TEST_FILE[:-4]) + '.param', "r") as f:
         param = json.load(f)
 
-    video = FFmpegStream(TEST_FILE, param, skip_frames=config.skip_frames)
+    video = FFmpegStream(TEST_FILE, param, skip_frames=SKIP_FRAMES)
     frames, frame_numer = [], 0
-    for i in range(config.seq_len):
+    for i in range(SEQ_LEN):
         image = video.read()
-        frames.append(image - config.IMAGE_MEAN)
-        frame_numer += (config.skip_frames  + 1)
+        frames.append(image)
+        frame_numer += (SKIP_FRAMES  + 1)
 
     with torch.no_grad():
         while video.isOpen():
             image = video.read()
             del frames[0]
-            frames.append(image - config.IMAGE_MEAN)
-            frame_numer += (config.skip_frames  + 1)
+            frames.append(image)
+            frame_numer += (SKIP_FRAMES  + 1)
             frames_array = einops.rearrange(np.array(frames), 'time height width channel -> time channel height width')
             frames_tensor = torch.from_numpy(frames_array).float().unsqueeze(0).to(device)
             x = model(frames_tensor)

@@ -1,9 +1,10 @@
 import torch
 import torch.nn as nn
-import config
+from utils.config import CONFIG
 
-from model.convlstm import ConvLSTM
+from modules.convlstm import ConvLSTM
 
+MODEL='model1'
 
 class Flatten(torch.nn.Module):
     def forward(self, input):
@@ -18,7 +19,7 @@ class FunPosModel(nn.Module):
 
         reduce = 1
         self.conv1 = nn.Conv2d(
-                in_channels = config.img_channels,
+                in_channels = CONFIG[MODEL]['img_channels'],
                 out_channels = 16,
                 kernel_size = 3,
                 stride = 1
@@ -35,9 +36,9 @@ class FunPosModel(nn.Module):
         self.pool1 = nn.MaxPool2d(2, 2)
 
         self.convlstm1 = ConvLSTM(
-                img_size = (int(config.img_height/2-reduce), int(config.img_width/2-reduce)),
+                img_size = (int(CONFIG[MODEL]['img_height']/2-reduce), int(CONFIG[MODEL]['img_width']/2-reduce)),
                 input_dim = 32,
-                hidden_dim = config.convlstm_hidden_dim*2,
+                hidden_dim = CONFIG[MODEL]['convlstm_hidden_dim']*2,
                 kernel_size = (3,3),
                 cnn_dropout = 0.1,
                 rnn_dropout = 0.1,
@@ -49,9 +50,9 @@ class FunPosModel(nn.Module):
         )
 
         self.convlstm2 = ConvLSTM(
-                img_size = (int(config.img_height/2-reduce), int(config.img_width/2-reduce)),
+                img_size = (int(CONFIG[MODEL]['img_height']/2-reduce), int(CONFIG[MODEL]['img_width']/2-reduce)),
                 input_dim = 256,
-                hidden_dim = config.convlstm_hidden_dim*2,
+                hidden_dim = CONFIG[MODEL]['convlstm_hidden_dim']*2,
                 kernel_size = (3,3),
                 cnn_dropout = 0.1,
                 rnn_dropout = 0.1,
@@ -65,7 +66,7 @@ class FunPosModel(nn.Module):
         self.flatten = Flatten()
 
         self.fc1 = nn.Linear(
-                int(config.img_width-(2*reduce))*int(config.img_height-(2*reduce))*config.convlstm_hidden_dim,
+                int(CONFIG[MODEL]['img_width']-(2*reduce))*int(CONFIG[MODEL]['img_height']-(2*reduce))*CONFIG[MODEL]['convlstm_hidden_dim'],
                 128
         )
         self.fc2 = nn.Linear(128, 1)
@@ -83,7 +84,7 @@ class FunPosModel(nn.Module):
 
         b, seq_len, _, h, w = x.size()
         x_new = []
-        for t in range(config.seq_len):
+        for t in range(CONFIG[MODEL]['seq_len']):
             a = self.conv1(x[:,t,:,:,:])
             a = self.conv2(a)
             a = self.pool1(a)

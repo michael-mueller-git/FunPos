@@ -1,33 +1,13 @@
 import torch
 import einops
 import einops.layers.torch
-import config
+from utils.config import CONFIG
 
 import torch.nn as nn
 
-from model.modules import Attention, PreNorm, FeedForward
+from modules.transformer import Attention, PreNorm, FeedForward, Transformer
 
-
-class Transformer(nn.Module):
-
-    def __init__(self, dim, depth, heads, dim_head, mlp_dim, dropout = 0.):
-        super().__init__()
-        self.layers = nn.ModuleList([])
-        self.norm = nn.LayerNorm(dim)
-        for _ in range(depth):
-            self.layers.append(nn.ModuleList([
-                PreNorm(dim, Attention(dim, heads = heads, dim_head = dim_head, dropout = dropout)),
-                PreNorm(dim, FeedForward(dim, mlp_dim, dropout = dropout))
-            ]))
-
-
-    def forward(self, x):
-        for attn, ff in self.layers:
-            x = attn(x) + x
-            x = ff(x) + x
-        return self.norm(x)
-
-
+MODEL='model2'
 
 class ViViT(nn.Module):
 
@@ -101,9 +81,9 @@ class FunPosTransformerModel(ViViT):
 
     def __init__(self):
         super().__init__(
-                image_size = config.img_width,
+                image_size = CONFIG[MODEL]['img_width'],
                 patch_size = 16,
-                num_frames = config.seq_len,
+                num_frames = CONFIG[MODEL]['seq_len'],
                 dim = 192,
                 depth = 4,
                 heads = 3,
