@@ -4,7 +4,7 @@ general:
   checkpoint_dir: 'checkpoint'
   train_dir: './data/train'
   batch_size: 1 # data loader is only implemented for case == 1!
-  select: 'model2'
+  select: 'model1'
   test_file: './data/test/example1.mkv'
 
 model1:
