@@ -50,7 +50,8 @@ class ViViTBackbone(nn.Module):
 
         self.mlp_head = nn.Sequential(
             nn.LayerNorm(dim),
-            nn.Linear(dim, self.T)
+            nn.Linear(dim, dim//self.t),
+            nn.Linear(dim//self.t, self.T)
         )
 
     def forward(self, x):
@@ -77,11 +78,11 @@ class FunPosTransformerModel(ViViTBackbone):
                 t = CONFIG[MODEL]['seq_len'],
                 h = CONFIG[MODEL]['img_height'],
                 w = CONFIG[MODEL]['img_width'],
-                patch_t = 4,
-                patch_h = 8,
-                patch_w = 8,
-                dim = 512,
-                depth = 6,
-                heads = 10,
-                mlp_dim = 8,
+                patch_t = 8,
+                patch_h = 16,
+                patch_w = 16,
+                dim = 768,
+                depth = 12,
+                heads = 12,
+                mlp_dim = 4096,
         )

@@ -8,6 +8,7 @@ from torch.utils.data import DataLoader
 from utils.dataset import Funscript_Dataset
 from model.model1 import FunPosModel
 from model.model2 import FunPosTransformerModel
+from model.model3 import Model3
 from utils.config import CONFIG
 
 

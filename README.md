@@ -25,3 +25,9 @@ To the standard question, I can say: I can not provide an pretrained Model! I do
 - [ ] increase model layers
   - Not possible i have only 6GB Video Ram.
 - [ ] Implement validation to prevent over fitting
+
+## Current State
+
+- Model 1 convergence when training, firs results are good
+- Model 2 do not convergence when training
+- Model 3 WIP

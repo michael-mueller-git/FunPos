@@ -63,6 +63,7 @@ class Funscript_Dataset(Dataset):
         while len(self.last_frames) >= self.seq_len:
             del self.last_frames[0]
         frame = self.stream.read()
+        # frame = frame / 255.0
         if frame is None:
             self.open_next_video()
         else:

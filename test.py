@@ -10,6 +10,7 @@ from utils.ffmpegstream import FFmpegStream
 from utils.config import CONFIG
 from model.model1 import FunPosModel
 from model.model2 import FunPosTransformerModel
+from model.model3 import Model3
 
 import numpy as np
 
