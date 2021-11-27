@@ -86,6 +86,10 @@ class Funscript_Dataset(Dataset):
             self.read_next_frame()
 
 
+    def get_uniform_random_int(self, lower, upper):
+        return torch.randint(lower, upper+1, (1,)).numpy()[0]
+
+
     def open_next_video(self):
         self.inc_video_idx()
         with open("".join(self.videos[self.video_idx][:-4]) + '.param', "r") as f:
@@ -93,6 +97,12 @@ class Funscript_Dataset(Dataset):
         with open("".join(self.videos[self.video_idx][:-4]) + '.labels', "r") as f:
             l = json.load(f)
             self.labels = {int(k):l[k] for k in l.keys()}
+        self.param['zoom'] = [
+            self.param['zoom'][0] + self.get_uniform_random_int(-10, 10),
+            self.param['zoom'][1] + self.get_uniform_random_int(-10, 10),
+            self.param['zoom'][2] + self.get_uniform_random_int(-10, 10),
+            self.param['zoom'][3] + self.get_uniform_random_int(-10, 10)
+        ]
         self.param['resize'] = (self.img_width, self.img_height)
         if self.stream is not None:
             self.stream.stop()

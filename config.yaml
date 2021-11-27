@@ -4,7 +4,7 @@ general:
   checkpoint_dir: 'checkpoint'
   train_dir: './data/train'
   batch_size: 1 # data loader is only implemented for case == 1!
-  select: 'model3'
+  select: 'model1'
   test_file: './data/test/example1.mkv'
 
 model1:
@@ -17,8 +17,8 @@ model1:
   convlstm_hidden_dim: 64
   seq_len: 8
   lr: 0.0001
-  lr_milestones: [7, 12, 15]
-  epochs: 25
+  lr_milestones: [4, 7, 9]
+  epochs: 10
 
 model2:
   name: 'funpos2'
