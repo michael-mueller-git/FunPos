@@ -18,13 +18,12 @@ class Model3(nn.Module):
     def __init__(self):
         super().__init__()
 
-        reduce = 1
         self.conv1 = CvT(
                 image_size=CONFIG[MODEL]['img_height'],
-                in_channels = CONFIG[MODEL]['img_channels']
+                in_channels = CONFIG[MODEL]['img_channels'],
+                dim = 16
         )
 
-        reduce += 1
         self.conv2 = CvT(
                 image_size=CONFIG[MODEL]['img_height'],
                 in_channels = 16,
