@@ -25,6 +25,7 @@ I put my test models on the [GitHub release page](https://github.com/michael-mue
 - [ ] increase model layers
   - Not possible i have only 6GB Video Ram.
 - [ ] Implement validation to prevent over fitting
+- [ ] Implement randomnes to data loader (for training) e.g. Gaussian noise, random tarnformation of frame sequences, ... to improve the generalization
 
 ## Current State
 
