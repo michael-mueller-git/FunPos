@@ -4,7 +4,7 @@ Deep Learning Model to generate funscripts.
 
 This repository contains my test scripts to evaluate the automatically generation of funscripts with deep learning models.
 
-To the standard question, I can say: I can not provide an pretrained Model! I do not have a sufficiently powerful GPU to train such a model at all.
+I put my test models on the [GitHub release page](https://github.com/michael-mueller-git/FunPos/releases), mostly for backup purpose.
 
 ## How to train the Model
 
@@ -28,6 +28,6 @@ To the standard question, I can say: I can not provide an pretrained Model! I do
 
 ## Current State
 
-- Model 1 convergence when training, first results are good
+- Model 1 convergence when training, first results are ok
 - Model 2 do not convergence when training
 - Model 3 WIP
