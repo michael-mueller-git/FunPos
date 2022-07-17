@@ -9,6 +9,7 @@ conda env create --name ViTPose --file=environment.yml
 ## Run
 
 ```bash
+conda activate ViTPose
 python -s main.py
 ```
 
