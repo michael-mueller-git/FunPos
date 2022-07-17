@@ -1,1 +1,1 @@
-# Torch hub cache directory
+# Torch test data directory
