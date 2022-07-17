@@ -54,9 +54,9 @@ class SingleMaskDataset(Dataset):
           ymin = np.min(pos[0])
           ymax = np.max(pos[0])
 
-          if abs((xmax-xmin) * (ymax-ymin)) < 5:
-            obj_ids = np.delete(obj_ids, [i])
-            continue
+          # if abs((xmax-xmin) * (ymax-ymin)) < 5:
+          #   obj_ids = np.delete(obj_ids, [i])
+          #   continue
 
           boxes.append([xmin, ymin, xmax, ymax])
 

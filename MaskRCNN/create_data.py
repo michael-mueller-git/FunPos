@@ -10,8 +10,7 @@ import sys
 import numpy as np
 
 SKIP_FRAMES = 3
-VIDEO_NUMBER=0
-video_file = './data/raw/example1.mkv'
+video_file = './data/raw/example6.mp4'
 out_path = './data/train'
 
 if not os.path.exists(video_file):
@@ -54,7 +53,7 @@ while video.isOpen():
         break
     elif key == ord(' '):
         if cv2.countNonZero(mask_out) > 5:
-            name = '{}/{}_{}'.format(out_path, VIDEO_NUMBER, frame_num)
+            name = '{}/{}_{}'.format(out_path, os.path.basename(video_file), str(frame_num).zfill(6))
             print('save', name)
             cv2.imwrite(name + '.png', frame)
             cv2.imwrite(name + '_anno.png', mask_out * 255)

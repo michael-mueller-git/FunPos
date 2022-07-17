@@ -11,9 +11,9 @@ import numpy as np
 
 
 TRAIN_DATA_DIR = './data/train'
-NUM_CLASSES = 2
+NUM_CLASSES = 2 # Number of classes (including background)
 HIDDEN_LAYER = 256
-N_EPOCHS = 10
+N_EPOCHS = 20
 SAVE_DIR = './out'
 
 if not os.path.exists(SAVE_DIR):

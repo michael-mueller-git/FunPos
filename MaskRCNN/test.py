@@ -6,7 +6,7 @@ from PIL import Image
 
 import matplotlib.pyplot as plt
 
-WEIGHTS = './out/maskRCNN_2'
+WEIGHTS = './out/MaskRCNN_9'
 NUM_CLASSES = 2
 HIDDEN_LAYER = 256
 IMG = './data/train/0_9.png'
