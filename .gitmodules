@@ -1,0 +1,3 @@
+[submodule "Pose/ViTPose/ViTPose"]
+	path = Pose/ViTPose/ViTPose
+	url = https://github.com/ViTAE-Transformer/ViTPose.git
