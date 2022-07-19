@@ -1,3 +1,6 @@
 [submodule "Pose/ViTPose/ViTPose"]
 	path = Pose/ViTPose/ViTPose
 	url = https://github.com/ViTAE-Transformer/ViTPose.git
+[submodule "Tracking/MMTracking/mmtracking"]
+	path = Tracking/MMTracking/mmtracking
+	url = https://github.com/open-mmlab/mmtracking.git
