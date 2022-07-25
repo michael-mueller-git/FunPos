@@ -7,7 +7,7 @@ from mmtrack.apis import inference_mot, init_model
 
 print(mmcv.collect_env())
 
-MODEL = 1
+MODEL = 2
 
 if MODEL == 1:
     mot_config = './mmtracking/configs/mot/deepsort/deepsort_faster-rcnn_fpn_4e_mot17-private-half.py'
