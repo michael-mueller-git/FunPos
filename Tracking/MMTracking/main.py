@@ -35,11 +35,13 @@ while video.isOpen():
     img = cv2.resize(img, None, fx=SCALE, fy=SCALE)
     if init_bbox is None:
         init_bbox = cv2.selectROI("Frame", img)
+        init_bbox = list(map(float, init_bbox))
+        # convert (x1, y1, w, h) to (x1, y1, x2, y2)
+        init_bbox[2] += init_bbox[0]
+        init_bbox[3] += init_bbox[1]
         print('init_bbox', init_bbox)
     result = inference_sot(sot_model, img, init_bbox, frame_id=i)
     # print(result)
-    result['track_bboxes'] = np.array([int(result['track_bboxes'][0]), int(result['track_bboxes'][1]), int(result['track_bboxes'][2]), int(result['track_bboxes'][3]), result['track_bboxes'][4]])
-    print(result)
     img = sot_model.show_result(img, result)
     i += 1
     cv2.imshow('Frame', img)
