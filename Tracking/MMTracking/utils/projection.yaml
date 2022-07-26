@@ -7,8 +7,8 @@ vr_he_180_sbs:
   video_filter: 'v360=input=he:in_stereo=sbs:pitch=${pitch}:yaw=${yaw}:roll=${roll}:output=flat:d_fov=${fov}:w=${width}:h=${height}'
   parameter:
     height: 512
-    width: 256
-    fov: 120
+    width: 512
+    fov: 100
     pitch: 0
     yaw: 0
     roll: 0
