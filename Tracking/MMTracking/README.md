@@ -3,6 +3,7 @@
 ## Setup
 
 ```bash
+bash ./setup.sh
 conda env create --name MMTracking --file=environment.yml
 ```
 
