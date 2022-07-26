@@ -4,7 +4,7 @@ import cv2
 import os
 import sys
 import mmcv
-import torch, torchvision
+import torch
 import mmdet
 import mmtrack
 from mmtrack.apis import inference_sot, init_model

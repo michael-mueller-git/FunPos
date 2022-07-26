@@ -165,9 +165,6 @@ dependencies:
     - motmetrics==1.2.5
     - opencv-python==4.6.0.66
     - seaborn==0.11.2
-    - torch==1.8.0+cu111
-    - torchaudio==0.7.2
-    - torchvision==0.8.2+cu110
     - xmltodict==0.13.0
     - xtcocotools==1.12
 prefix: /home/arch/miniconda3/envs/MMTracking
