@@ -14,7 +14,7 @@ while cap.isOpened():
     imgR = img[:, int(width/2):]
     result_stereo = np.array(inference(imgL, imgR, "stereo"))
     if prev is not None:
-        result_flow = np.array(inference(imgL, prev, "flow"))
+        result_flow = np.array(inference(prev, imgL, "flow"))
         cv2.imshow('flow', result_flow)
 
     cv2.imshow('stereo', result_stereo)
