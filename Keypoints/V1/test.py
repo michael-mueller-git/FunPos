@@ -27,9 +27,7 @@ def test():
     images, targets = next(iterator)
     images = list(image.to(device) for image in images)
 
-    model = get_model(num_keypoints = 2)
-    model.to(device)
-    model.load_state_dict(torch.load('keypointsrcnn_weights.pth'))
+    model = get_model(num_keypoints = 2, weights_path='keypointsrcnn_weights.pth')
     model.to(device)
 
     with torch.no_grad():

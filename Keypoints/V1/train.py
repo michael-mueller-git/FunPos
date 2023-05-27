@@ -34,6 +34,7 @@ def train():
     num_epochs = 5
 
     for epoch in range(num_epochs):
+        print("epoch", epoch)
         train_one_epoch(model, optimizer, data_loader_train, device, epoch, print_freq=1000)
         lr_scheduler.step()
         evaluate(model, data_loader_test, device)
