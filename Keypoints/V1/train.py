@@ -25,7 +25,7 @@ def train():
     data_loader_train = DataLoader(dataset_train, batch_size=3, shuffle=True, collate_fn=collate_fn)
     data_loader_test = DataLoader(dataset_test, batch_size=1, shuffle=False, collate_fn=collate_fn)
 
-    model = get_model(num_keypoints = 2)
+    model = get_model(device, num_keypoints = 2)
     model.to(device)
 
     params = [p for p in model.parameters() if p.requires_grad]
