@@ -4,3 +4,6 @@
 [submodule "Tracking/MMTracking/mmtracking"]
 	path = Tracking/MMTracking/mmtracking
 	url = https://github.com/open-mmlab/mmtracking.git
+[submodule "Keypoints/V1/lib/funscript_toolbox"]
+	path = Keypoints/V1/lib/funscript_toolbox
+	url = https://github.com/michael-mueller-git/funscript-toolbox.git
