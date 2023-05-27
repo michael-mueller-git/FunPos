@@ -35,7 +35,7 @@ def test():
         model.eval()
         output = model(images)
 
-    print("Predictions: \n", output)
+    # print("Predictions: \n", output)
 
     image = (images[0].permute(1,2,0).detach().cpu().numpy() * 255).astype(np.uint8)
     scores = output[0]['scores'].detach().cpu().numpy()
@@ -55,6 +55,8 @@ def test():
     for bbox in output[0]['boxes'][high_scores_idxs][post_nms_idxs].detach().cpu().numpy():
         bboxes.append(list(map(int, bbox.tolist())))
 
+    print("boxes", bboxes)
+    print("keypoints", keypoints)
     visualize(image, bboxes, keypoints)
 
 

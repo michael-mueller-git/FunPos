@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 sys.path.append(os.path.join(os.path.dirname(__file__), "lib", "keypoint_rcnn_training"))
 
 from utils import collate_fn
-from engine import train_one_epoch, evaluate
+from engine import train_one_epoch
 
 from dataset import ClassDataset, train_transform
 from model import get_model
@@ -37,9 +37,7 @@ def train():
         print("epoch", epoch)
         train_one_epoch(model, optimizer, data_loader_train, device, epoch, print_freq=1000)
         lr_scheduler.step()
-        evaluate(model, data_loader_test, device)
-
-    torch.save(model.state_dict(), 'keypointsrcnn_weights.pth')
+        torch.save(model.state_dict(), 'keypointsrcnn_weights.pth')
 
 
 if __name__ == "__main__":
