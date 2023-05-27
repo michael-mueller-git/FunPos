@@ -46,7 +46,7 @@ in
         pyqt5
         pyqtgraph
         pyyaml
-        torch
+        python3.9-torch
         torchvision
         scipy
         screeninfo
