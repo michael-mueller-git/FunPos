@@ -1,4 +1,4 @@
-{ pkgs ? import <nixpkgs> {} }:
+{ pkgs-no-cuda, pkgs ? import <nixpkgs> {} }:
 let python =
     let
     packageOverrides = self:
@@ -63,7 +63,7 @@ let python =
       };
     };
     in
-      pkgs.python39.override {inherit packageOverrides; self = python;};
+      pkgs-no-cuda.python39.override {inherit packageOverrides; self = python;};
 in
   pkgs.mkShell {
     nativeBuildInputs = with pkgs; [
@@ -76,6 +76,8 @@ in
       python.pkgs.opencv4
       python.pkgs.simplification
       python.pkgs.albumentations
+      cudaPackages.cudatoolkit
+      cudaPackages.cudnn
       (python39.withPackages (p: with p; [
         coloredlogs
         cryptography

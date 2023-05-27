@@ -12,10 +12,21 @@
 
   outputs = { self, nixpkgs, flake-utils }:
     flake-utils.lib.eachDefaultSystem
-      (system:
-        let pkgs = nixpkgs.legacyPackages.${system}; in
+    (system:
+    let
+      pkgs = import nixpkgs {
+        inherit system;
+        config.allowUnfree = true;
+        config.cudaSupport = false; # disable for now take to long to build
+      };
+      pkgs-no-cuda = import nixpkgs {
+        inherit system;
+        config.allowUnfree = true;
+        config.cudaSupport = false;
+      };
+    in
         {
-          devShells.default = import ./shell.nix { inherit pkgs; };
+          devShells.default = import ./shell.nix { inherit pkgs pkgs-no-cuda; };
         }
       );
 }
