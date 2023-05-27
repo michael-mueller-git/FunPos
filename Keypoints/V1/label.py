@@ -5,6 +5,5 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "lib", "funscript_toolbo
 
 from funscript_toolbox.utils.position_annotation import position_anotation_tool_entrypoint
 
-def entrypoint():
+if __name__ == "__main__":
     position_anotation_tool_entrypoint()
-
