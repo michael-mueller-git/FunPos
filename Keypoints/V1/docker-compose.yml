@@ -9,7 +9,7 @@ services:
       context: "."
       dockerfile: "Dockerfile"
     container_name: keypoints
-    restart: unless-stopped
+    restart: "no"
     volumes:
       - ".:/app"
       - "cache:/home/user/.cache"
