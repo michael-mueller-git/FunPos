@@ -1,6 +1,5 @@
-# usage: `nix develop --command zsh`
 {
-  description = "MTFG";
+  description = "Keypoint Model 1 Environment";
 
   inputs = {
     nixpkgs = {

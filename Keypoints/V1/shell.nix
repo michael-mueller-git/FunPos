@@ -8,6 +8,47 @@ let python =
         cmakeFlags = old.cmakeFlags ++ ["-DWITH_QT=ON"];
       });
 
+      qudida = pkgs.python39Packages.buildPythonPackage rec {
+        pname = "qudida";
+        version = "0.0.4";
+        format = "wheel";
+
+        src = pkgs.fetchurl {
+          url = "https://files.pythonhosted.org/packages/f0/a1/a5f4bebaa31d109003909809d88aeb0d4b201463a9ea29308d9e4f9e7655/qudida-0.0.4-py3-none-any.whl";
+          sha256 = "4519714c40cd0f2e6c51e1735edae8f8b19f4efe1f33be13e9d644ca5f736dd6";
+        };
+
+        propagatedBuildInputs = with pkgs.python39Packages; [
+          python.pkgs.opencv4
+          scikit-learn
+          typing-extensions
+        ];
+
+        pipInstallFlags = [ "--no-dependencies" ];
+        doCheck = false;
+      };
+
+      albumentations = pkgs.python39Packages.buildPythonPackage rec {
+        pname = "albumentations";
+        version = "1.3.0";
+        format = "wheel";
+
+        src = pkgs.fetchurl {
+          url = "https://files.pythonhosted.org/packages/4f/55/3c2ce84c108fc1d422afd6de153e4b0a3e6f96ecec4cb9afcf0284ce3538/albumentations-1.3.0-py3-none-any.whl";
+          sha256 = "294165d87d03bc8323e484927f0a5c1a3c64b0e7b9c32a979582a6c93c363bdf";
+        };
+
+        propagatedBuildInputs = with pkgs.python39Packages; [
+          scipy
+          scikit-learn
+          scikitimage
+          python.pkgs.qudida
+        ];
+
+        pipInstallFlags = [ "--no-dependencies" ];
+        doCheck = false;
+      };
+
       simplification = pkgs.python39Packages.buildPythonPackage rec {
         pname = "simplification";
         version = "0.6.2";
@@ -34,17 +75,17 @@ in
       libsForQt5.qt5ct
       python.pkgs.opencv4
       python.pkgs.simplification
+      python.pkgs.albumentations
       (python39.withPackages (p: with p; [
         coloredlogs
         cryptography
         matplotlib
-        mpv
         pillow
         pip
-        playsound
         pynput
         pyqt5
         pyqtgraph
+        pycocotools
         pyyaml
         pytorch
         torchvision
