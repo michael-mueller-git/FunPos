@@ -1,0 +1,16 @@
+version: "3.7"
+
+volumes:
+  cache:
+
+services:
+  server:
+    build:
+      context: "."
+      dockerfile: "Dockerfile"
+    container_name: keypoints
+    restart: unless-stopped
+    volumes:
+      - ".:/app"
+      - "cache:/home/user/.cache"
+
