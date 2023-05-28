@@ -125,11 +125,11 @@ def visualize(image, bboxes, keypoints, image_original=None, bboxes_original=Non
     for kps in keypoints:
         for idx, kp in enumerate(kps):
             image = cv2.circle(image.copy(), tuple(kp), 5, (255,0,0), 10)
-            image = cv2.putText(image.copy(), " " + keypoints_classes_ids2names[idx], tuple(kp), cv2.FONT_HERSHEY_SIMPLEX, 2, (255,0,0), 3, cv2.LINE_AA)
 
     if image_original is None and keypoints_original is None:
         plt.figure(figsize=(40,40))
         plt.imshow(image)
+        plt.show()
 
     else:
         for bbox in bboxes_original:
@@ -140,7 +140,6 @@ def visualize(image, bboxes, keypoints, image_original=None, bboxes_original=Non
         for kps in keypoints_original:
             for idx, kp in enumerate(kps):
                 image_original = cv2.circle(image_original, tuple(kp), 5, (255,0,0), 10)
-                image_original = cv2.putText(image_original, " " + keypoints_classes_ids2names[idx], tuple(kp), cv2.FONT_HERSHEY_SIMPLEX, 2, (255,0,0), 3, cv2.LINE_AA)
 
         f, ax = plt.subplots(1, 2, figsize=(40, 20))
 

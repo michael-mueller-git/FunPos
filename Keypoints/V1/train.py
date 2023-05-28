@@ -31,7 +31,7 @@ def train():
     params = [p for p in model.parameters() if p.requires_grad]
     optimizer = torch.optim.SGD(params, lr=0.001, momentum=0.9, weight_decay=0.0005)
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.3)
-    num_epochs = 5
+    num_epochs = 10
 
     for epoch in range(num_epochs):
         print("epoch", epoch)
