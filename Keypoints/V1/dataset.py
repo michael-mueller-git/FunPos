@@ -127,6 +127,7 @@ def visualize(image, bboxes, keypoints, image_original=None, bboxes_original=Non
             image = cv2.circle(image.copy(), tuple(kp), 5, (255,0,0), 10)
 
     if image_original is None and keypoints_original is None:
+        return image
         plt.figure(figsize=(40,40))
         plt.imshow(image)
         plt.show()

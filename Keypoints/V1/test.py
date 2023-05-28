@@ -1,6 +1,7 @@
 import os
 import torch
 import sys
+import cv2
 import torchvision
 
 import numpy as np
@@ -58,8 +59,12 @@ def test():
 
             print("boxes", bboxes)
             print("keypoints", keypoints)
-            visualize(image, bboxes, keypoints)
-            plt.close()
+            img = visualize(image, bboxes, keypoints)
+            cv2.imshow("preview", img)
+            ret = cv2.waitKey(1)
+            if ret == ord(' '):
+                print("exit")
+                return
 
 
 if __name__ == "__main__":
