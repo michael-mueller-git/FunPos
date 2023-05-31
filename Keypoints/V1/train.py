@@ -17,13 +17,8 @@ def train():
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
     KEYPOINTS_FOLDER_TRAIN = 'data/train'
-    KEYPOINTS_FOLDER_TEST = 'data/test'
-
     dataset_train = ClassDataset(KEYPOINTS_FOLDER_TRAIN, transform=train_transform(), demo=False)
-    dataset_test = ClassDataset(KEYPOINTS_FOLDER_TEST, transform=None, demo=False)
-
     data_loader_train = DataLoader(dataset_train, batch_size=3, shuffle=True, collate_fn=collate_fn)
-    data_loader_test = DataLoader(dataset_test, batch_size=1, shuffle=False, collate_fn=collate_fn)
 
     model = get_model(device, num_keypoints = 2)
     model.to(device)
