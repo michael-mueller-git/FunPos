@@ -19,8 +19,8 @@ from utils import collate_fn
 def train_transform():
     return A.Compose([
         A.Sequential([
-            # A.RandomRotate90(p=1), # Random rotation of an image by 90 degrees zero or more times
-            A.RandomBrightnessContrast(brightness_limit=0.3, contrast_limit=0.3, brightness_by_max=True, always_apply=False, p=1), # Random change of brightness & contrast
+            A.HorizontalFlip(p=0.5),
+            A.RandomBrightnessContrast(brightness_limit=0.3, contrast_limit=0.3, brightness_by_max=True, always_apply=False, p=1),
         ], p=1)
     ],
     keypoint_params=A.KeypointParams(format='xy'), # More about keypoint formats used in albumentations library read at https://albumentations.ai/docs/getting_started/keypoints_augmentation/

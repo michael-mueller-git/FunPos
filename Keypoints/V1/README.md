@@ -13,7 +13,7 @@ conda env create --name keypoints_v1 --file=environment.yaml
 conda activate keypoints_v1
 ```
 
-Or better use `micormamba`.
+Or better use `micromamba`.
 
 ## nix (CPU env)
 

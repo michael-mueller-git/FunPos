@@ -22,7 +22,7 @@ def test():
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     KEYPOINTS_FOLDER_TEST = 'data/test'
     dataset_test = ClassDataset(KEYPOINTS_FOLDER_TEST, transform=None, demo=False)
-    data_loader_test = DataLoader(dataset_test, batch_size=1, shuffle=False, collate_fn=collate_fn)
+    data_loader_test = DataLoader(dataset_test, batch_size=1, shuffle=True, collate_fn=collate_fn)
 
     iterator = iter(data_loader_test)
 

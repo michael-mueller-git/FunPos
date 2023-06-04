@@ -5,7 +5,7 @@ IMAGES_DIR = './data/train/images'
 ANNOTATION_DIR = './data/train/annotations'
 DIGITS = 8
 
-files = [f for f in os.listdir('./data/train/images')]
+files = [f for f in os.listdir(IMAGES_DIR)]
 
 for f in files:
     num, _ = f.split('_')[-1].split('.', 2)
