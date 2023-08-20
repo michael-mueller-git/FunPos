@@ -35,8 +35,10 @@ class ClassDataset(Dataset):
         self.demo = demo # Use demo=True if you need transformed and original images (for example, for visualization purposes)
         self.imgs_files = sorted(os.listdir(os.path.join(root, "images")))
         self.annotations_files = sorted(os.listdir(os.path.join(root, "annotations")))
+        self.last_idx = 0
 
     def __getitem__(self, idx):
+        self.last_idx = idx
         img_path = os.path.join(self.root, "images", self.imgs_files[idx])
         annotations_path = os.path.join(self.root, "annotations", self.annotations_files[idx])
 
@@ -106,7 +108,7 @@ class ClassDataset(Dataset):
         img_original = F.to_tensor(img_original)
 
         if self.demo:
-            return img, target, img_original, target_original
+            return img, target, img_original, target_original, img_path
         else:
             return img, target
 

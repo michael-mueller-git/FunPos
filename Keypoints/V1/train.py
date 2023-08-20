@@ -26,13 +26,13 @@ def train():
     params = [p for p in model.parameters() if p.requires_grad]
     optimizer = torch.optim.SGD(params, lr=0.001, momentum=0.9, weight_decay=0.0005)
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.3)
-    num_epochs = 6
+    num_epochs = 5
 
     for epoch in range(num_epochs):
         print("epoch", epoch)
-        train_one_epoch(model, optimizer, data_loader_train, device, epoch, print_freq=1000)
+        train_one_epoch(model, optimizer, data_loader_train, device, epoch, print_freq=100)
         lr_scheduler.step()
-        torch.save(model.state_dict(), 'keypointsrcnn_weights.pth')
+        torch.save(model.state_dict(), f"keypointsrcnn_weights_{epoch}.pth")
 
 
 if __name__ == "__main__":

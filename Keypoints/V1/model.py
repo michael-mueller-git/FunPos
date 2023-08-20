@@ -14,6 +14,7 @@ def get_model(device, num_keypoints, weights_path=None):
 
     if weights_path:
         state_dict = torch.load(weights_path, map_location=device)
+        # model.load_state_dict(state_dict, strict=False)
         model.load_state_dict(state_dict)
 
     return model
